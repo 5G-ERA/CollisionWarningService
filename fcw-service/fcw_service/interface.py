@@ -43,7 +43,6 @@ class Server(NetworkApplicationServer):
 
     def __init__(
         self,
-        *args,
         **kwargs,
     ) -> None:
         """Constructor.
@@ -59,7 +58,6 @@ class Server(NetworkApplicationServer):
                 "image_hevc": CallbackInfoServer(ChannelType.HEVC, self.image_callback),
                 "image_jpeg": CallbackInfoServer(ChannelType.JPEG, self.image_callback),
             },
-            *args,
             **kwargs,
         )
 

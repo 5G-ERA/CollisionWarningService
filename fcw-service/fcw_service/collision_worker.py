@@ -85,7 +85,7 @@ class CollisionWorker(Thread):
         del self._detector
 
     def run(self) -> None:
-        """FWC worker loop. Periodically reads images from python internal queue process them."""
+        """FCW worker loop. Periodically reads images from python internal queue process them."""
 
         logger.info(f"{self.name} thread is running.")
 
@@ -109,6 +109,8 @@ class CollisionWorker(Thread):
                 results = self._generate_results(detections, metadata)
                 # Send results via the provided callback.
                 self._send_function(results)
+
+                self.latency_measurements.store_latency(time.perf_counter_ns() - metadata["recv_timestamp"])
 
                 if self._viz:
                     # If visualisation is enabled, send image with results over ZeroMQ.
@@ -200,16 +202,12 @@ class CollisionWorker(Thread):
                 object_statuses[i].path = [pts for pts in object_statuses[i].path.coords]
             object_statuses = [asdict(object_status) for object_status in object_statuses]
 
-            send_timestamp = time.perf_counter_ns()
-
-            self.latency_measurements.store_latency(send_timestamp - metadata["recv_timestamp"])
-
             return {
                 "timestamp": metadata.get("timestamp", 0),
                 "recv_timestamp": metadata.get("recv_timestamp", 0),
                 "timestamp_before_process": metadata["timestamp_before_process"],
                 "timestamp_after_process": metadata["timestamp_after_process"],
-                "send_timestamp": send_timestamp,
+                "send_timestamp": time.perf_counter_ns(),
                 "dangerous_detections": dangerous_detections,
                 "objects": object_statuses,
             }
